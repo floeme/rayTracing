@@ -2,27 +2,26 @@ package fr.florian;
 
 import java.awt.*;
 
-class Plane extends Geometry {
-    Vec3f point;
-    Vec3f normal;
+public class Plane extends Geometry {
+    public Vec3f P0, N;
 
-    public Plane(Vec3f point, Vec3f normal) {
-        this.point = point;
-        this.normal = normal;
-        this.color = new Vec3f(1, 0,0);
+    public Plane(Vec3f P0, Vec3f N, Material mat) {
+        this.P0 = P0;
+        this.N  = Vec3f.normalize(N);
+        this.material = mat;
     }
 
     @Override
-    public double getIntersection(Vec3f P, Vec3f v) {
-        float denom = normal.x * v.x + normal.y * v.y + normal.z * v.z;
+    public float getIntersection(Vec3f P, Vec3f v) {
+        float denom = N.x * v.x + N.y * v.y + N.z * v.z;
         if (denom == 0) return -1;
 
-        float t = ((point.x - P.x) * normal.x + (point.y - P.y) * normal.y + (point.z - P.z) * normal.z) / denom;
+        float t = ((P0.x - P.x) * N.x + (P0.y - P.y) * N.y + (P0.z - P.z) * N.z) / denom;
         return (t >= 0) ? t : -1;
     }
 
     @Override
     public Vec3f getNormal(Vec3f intersection) {
-        return normal;
+        return N;
     }
 }

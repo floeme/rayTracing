@@ -1,42 +1,51 @@
 package fr.florian;
 
-public class Triangle extends Geometry {
-    private Vec3f a, b, c;
+import static fr.florian.JavaTga.EPS;
 
-    public Triangle(Vec3f a, Vec3f b, Vec3f c) {
+/**
+ * Triangle primitive.
+ */
+public class Triangle extends Geometry {
+    private final Vec3f a, b, c;
+    private final Vec3f normal;
+
+    public Triangle(Vec3f a, Vec3f b, Vec3f c, Material material) {
         this.a = a;
         this.b = b;
         this.c = c;
-        this.color = new Vec3f(0,0,1);
+        this.normal = Vec3f.normalize(c.sub(a).cross(b.sub(a)));
+        this.material = material;
     }
 
     @Override
-    public double getIntersection(Vec3f P, Vec3f v) {
-        Vec3f edge1 = b.subtract(a);
-        Vec3f edge2 = c.subtract(a);
-        Vec3f h = Vec3f.crossProduct(v, edge2);
-        float det = Vec3f.dotProduct(edge1, h);
-
-        if (Math.abs(det) < 1e-8) return -1; // rayon parallèle au triangle
+    public float getIntersection(Vec3f P, Vec3f v) {
+        Vec3f edge1 = b.sub(a);
+        Vec3f edge2 = c.sub(a);
+        Vec3f h = v.cross(edge2);
+        float det = edge1.dot(h);
+        if (Math.abs(det) < EPS){
+            return -1;
+        }
 
         float invDet = 1.0f / det;
-        Vec3f s = P.subtract(a);
-        float u = Vec3f.dotProduct(s, h) * invDet;
+        Vec3f s = P.sub(a);
+        float u = s.dot(h) * invDet;
+        if (u < 0f || u > 1f){
+            return -1;
+        }
 
-        if (u < 0 || u > 1) return -1; // en dehors du triangle
+        Vec3f q = s.cross(edge1);
+        float vParam = v.dot(q) * invDet;
+        if (vParam < 0f || u + vParam > 1f){
+            return -1;
+        }
 
-        Vec3f q = Vec3f.crossProduct(s, edge1);
-        float vParam = Vec3f.dotProduct(v, q) * invDet;
-
-        if (vParam < 0 || (u + vParam) > 1) return -1; // en dehors du triangle
-
-        double t = Vec3f.dotProduct(edge2, q) * invDet;
-        return (t > 0) ? t : -1; // Si t < 0, c'est derrière la caméra
+        float t = edge2.dot(q) * invDet;
+        return (t > EPS) ? t : -1;
     }
-
 
     @Override
     public Vec3f getNormal(Vec3f intersection) {
-        return null;
+        return normal;
     }
 }
